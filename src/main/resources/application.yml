@@ -2,7 +2,7 @@ server:
   port: 8761
 spring:
   application:
-    name: j-eureka
+    name: jeureka
 eureka:
   client:
     register-with-eureka: false
