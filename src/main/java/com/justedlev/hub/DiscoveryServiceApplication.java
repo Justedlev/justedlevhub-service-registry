@@ -1,4 +1,4 @@
-package com.justedlev.discovery;
+package com.justedlev.hub;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

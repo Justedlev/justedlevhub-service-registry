@@ -1,4 +1,4 @@
-package com.justedlev.discovery;
+package com.justedlev.hub;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
