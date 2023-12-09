@@ -11,6 +11,8 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: ${SERVICE_REGISTRY}
+  instance:
+    prefer-ip-address: true
 
 logging:
   level:

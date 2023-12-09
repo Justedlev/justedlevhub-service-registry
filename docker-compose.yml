@@ -1,0 +1,103 @@
+# docker-compose build
+# docker-compose up -d --build
+
+version: "3.9"
+name: justedlevhub
+services:
+  postgres:
+    container_name: postgresql
+    image: postgres:15.4-alpine
+    environment:
+      POSTGRES_USER: justedlev
+      POSTGRES_DB: justedlev-hub-db
+      POSTGRES_PASSWORD: Just96lyk3@d
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./.tmp/init-db:/docker-entrypoint-initdb.d
+      - ./.tmp/postgresql-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U justedlev -d"]
+      interval: 15s
+      timeout: 10s
+      retries: 7
+      start_period: 12s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 250MB
+
+  # pgadmin4:
+  #   container_name: pg-admin-4
+  #   image: dpage/pgadmin4:7.6
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: "edyardlyk@gmail.com"
+  #     PGADMIN_DEFAULT_PASSWORD: "Just96lyk3@d"
+  #     PGADMIN_CONFIG_SERVER_MODE: "False"
+  #   volumes:
+  #     - .tmp/pgadmin-data:/var/lib/pgadmin
+  #   ports:
+  #     - "5050:80"
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.5'
+  #         memory: 1G
+  #   networks:
+  #     - justedlev-hub
+  
+  service-registry:
+    build: ./service-registry
+    container_name: service-registry
+    image: justedlev/service-registry:1.0.0-SNAPSHOT
+    env_file:
+      - ./service-registry/.env/docker.env
+    ports:
+      - "8761:8761"
+  
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    env_file:
+      - ./api-gateway/.env/docker.env
+    image: justedlev/api-gateway:1.0.0-SNAPSHOT
+    ports:
+      - "8765:8765"
+    depends_on:
+      - service-registry
+      - sso
+  
+  notifications:
+    build: ./notification
+    container_name: notifications
+    env_file:
+      - ./notification/.env/docker.env
+    image: justedlev/notification:1.0.0-SNAPSHOT
+    ports:
+      - "0:8080"
+    depends_on:
+      - postgres
+      - service-registry
+
+  sso:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:22.0.3
+    command: ["start-dev", "--http-port=9321"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: Just96lyk3@d
+      KC_HEALTH_ENABLED: true
+      KC_HOSTNAME: localhost
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/justedlev-hub-db
+      KC_DB_USERNAME: justedlev
+      KC_DB_PASSWORD: Just96lyk3@d
+      KC_DB_SCHEMA: keycloak
+    depends_on:
+      - postgres
+    ports:
+      - "9321:9321"
